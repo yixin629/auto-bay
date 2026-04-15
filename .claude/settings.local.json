@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npx create-next-app@latest frontend --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack --use-npm)",
+      "Bash(npm install:*)",
+      "Bash(npx -y shadcn@latest init -d)",
+      "Bash(npx shadcn@latest add button card input table badge sidebar)",
+      "Bash(npx next:*)",
+      "Bash(pip install:*)",
+      "Bash(python -m pip --version)",
+      "Bash(python -m ensurepip)",
+      "Bash(python -m pip install pydantic-settings pydantic email-validator pyjwt \"passlib[bcrypt]\" bcrypt httpx anthropic openai tenacity \"sqlalchemy[asyncio]\" asyncpg)"
+    ]
+  }
+}
