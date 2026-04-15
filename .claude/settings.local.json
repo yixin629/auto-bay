@@ -10,7 +10,9 @@
       "Bash(pip install:*)",
       "Bash(python -m pip --version)",
       "Bash(python -m ensurepip)",
-      "Bash(python -m pip install pydantic-settings pydantic email-validator pyjwt \"passlib[bcrypt]\" bcrypt httpx anthropic openai tenacity \"sqlalchemy[asyncio]\" asyncpg)"
+      "Bash(python -m pip install pydantic-settings pydantic email-validator pyjwt \"passlib[bcrypt]\" bcrypt httpx anthropic openai tenacity \"sqlalchemy[asyncio]\" asyncpg)",
+      "Bash(python -c ':*)",
+      "Bash(python -m pip install fastapi uvicorn python-multipart alembic celery redis orjson python-dateutil)"
     ]
   }
 }

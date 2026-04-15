@@ -43,6 +43,9 @@ def _register_routers(app: FastAPI) -> None:
     from app.modules.listings.router import router as listings_router
     from app.modules.orders.router import router as orders_router
     from app.modules.inventory.router import router as inventory_router
+    from app.modules.pricing.router import router as pricing_router
+    from app.modules.customer_service.router import router as cs_router
+    from app.modules.marketing.router import router as marketing_router
 
     prefix = settings.api_v1_prefix
     app.include_router(auth_router, prefix=f"{prefix}/auth", tags=["auth"])
@@ -50,6 +53,9 @@ def _register_routers(app: FastAPI) -> None:
     app.include_router(listings_router, prefix=f"{prefix}/listings", tags=["listings"])
     app.include_router(orders_router, prefix=f"{prefix}/orders", tags=["orders"])
     app.include_router(inventory_router, prefix=f"{prefix}/inventory", tags=["inventory"])
+    app.include_router(pricing_router, prefix=f"{prefix}/pricing", tags=["pricing"])
+    app.include_router(cs_router, prefix=f"{prefix}/customer-service", tags=["customer-service"])
+    app.include_router(marketing_router, prefix=f"{prefix}/marketing", tags=["marketing"])
 
 
 app = create_app()

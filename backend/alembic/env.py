@@ -14,6 +14,9 @@ from app.modules.products.models import PlatformConnection, Product, ProductTran
 from app.modules.listings.models import Listing  # noqa: F401
 from app.modules.orders.models import Order, OrderLineItem, Shipment  # noqa: F401
 from app.modules.inventory.models import InventoryItem, InventoryLocation, InventoryMovement  # noqa: F401
+from app.modules.pricing.models import ExchangeRate, PriceHistory  # noqa: F401
+from app.modules.customer_service.models import CustomerMessage  # noqa: F401
+from app.modules.marketing.models import AITask, MarketingCampaign  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)
