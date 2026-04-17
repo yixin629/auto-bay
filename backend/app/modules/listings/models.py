@@ -46,7 +46,7 @@ class Listing(UUIDMixin, TimestampMixin, Base):
     external_listing_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     external_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     status: Mapped[ListingStatus] = mapped_column(
-        Enum(ListingStatus), default=ListingStatus.DRAFT, server_default="draft"
+        Enum(ListingStatus), default=ListingStatus.DRAFT, server_default="DRAFT"
     )
     title: Mapped[str | None] = mapped_column(String(500), nullable=True)
     price: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
@@ -54,7 +54,7 @@ class Listing(UUIDMixin, TimestampMixin, Base):
     platform_category_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     platform_specific: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
     pricing_strategy: Mapped[PricingStrategy] = mapped_column(
-        Enum(PricingStrategy), default=PricingStrategy.FIXED, server_default="fixed"
+        Enum(PricingStrategy), default=PricingStrategy.FIXED, server_default="FIXED"
     )
     pricing_config: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
     last_synced_at: Mapped[datetime | None] = mapped_column(

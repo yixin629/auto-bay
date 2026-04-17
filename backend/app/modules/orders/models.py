@@ -51,7 +51,7 @@ class Order(UUIDMixin, TimestampMixin, Base):
     region: Mapped[str | None] = mapped_column(String(5), nullable=True)
     external_order_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     status: Mapped[OrderStatus] = mapped_column(
-        Enum(OrderStatus), default=OrderStatus.NEW, server_default="new"
+        Enum(OrderStatus), default=OrderStatus.NEW, server_default="NEW"
     )
     customer_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     customer_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -64,7 +64,7 @@ class Order(UUIDMixin, TimestampMixin, Base):
     total: Mapped[float] = mapped_column(Numeric(12, 2), default=0, server_default="0")
     currency: Mapped[str] = mapped_column(String(3), default="AUD", server_default="AUD")
     payment_status: Mapped[PaymentStatus] = mapped_column(
-        Enum(PaymentStatus), default=PaymentStatus.PENDING, server_default="pending"
+        Enum(PaymentStatus), default=PaymentStatus.PENDING, server_default="PENDING"
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     ordered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -110,7 +110,7 @@ class Shipment(UUIDMixin, TimestampMixin, Base):
     tracking_number: Mapped[str | None] = mapped_column(String(255), nullable=True)
     label_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     status: Mapped[ShipmentStatus] = mapped_column(
-        Enum(ShipmentStatus), default=ShipmentStatus.LABEL_CREATED, server_default="label_created"
+        Enum(ShipmentStatus), default=ShipmentStatus.LABEL_CREATED, server_default="LABEL_CREATED"
     )
     shipped_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     estimated_delivery: Mapped[datetime | None] = mapped_column(

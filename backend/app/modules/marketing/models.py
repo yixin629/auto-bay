@@ -34,7 +34,7 @@ class MarketingCampaign(UUIDMixin, TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     campaign_type: Mapped[CampaignType] = mapped_column(Enum(CampaignType), nullable=False)
     status: Mapped[CampaignStatus] = mapped_column(
-        Enum(CampaignStatus), default=CampaignStatus.DRAFT, server_default="draft"
+        Enum(CampaignStatus), default=CampaignStatus.DRAFT, server_default="DRAFT"
     )
     budget_daily: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
     budget_total: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)

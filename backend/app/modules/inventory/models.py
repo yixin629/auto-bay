@@ -34,7 +34,7 @@ class InventoryLocation(UUIDMixin, TimestampMixin, Base):
     country: Mapped[str | None] = mapped_column(String(2), nullable=True)
     address: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
     location_type: Mapped[LocationType] = mapped_column(
-        Enum(LocationType), default=LocationType.OWN_WAREHOUSE, server_default="own_warehouse"
+        Enum(LocationType), default=LocationType.OWN_WAREHOUSE, server_default="OWN_WAREHOUSE"
     )
 
 

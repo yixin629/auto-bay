@@ -92,7 +92,7 @@ class Product(UUIDMixin, TimestampMixin, Base):
 
     # Status
     status: Mapped[ProductStatus] = mapped_column(
-        Enum(ProductStatus), default=ProductStatus.DRAFT, server_default="draft"
+        Enum(ProductStatus), default=ProductStatus.DRAFT, server_default="DRAFT"
     )
 
     # AI-generated metadata (embeddings, tags, classification scores, etc.)

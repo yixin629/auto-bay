@@ -39,7 +39,7 @@ class CustomerMessage(UUIDMixin, TimestampMixin, Base):
     sender: Mapped[str | None] = mapped_column(String(255), nullable=True)
     body: Mapped[str] = mapped_column(Text, nullable=False)
     intent: Mapped[MessageIntent] = mapped_column(
-        Enum(MessageIntent), default=MessageIntent.UNKNOWN, server_default="unknown"
+        Enum(MessageIntent), default=MessageIntent.UNKNOWN, server_default="UNKNOWN"
     )
     is_ai_generated: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     ai_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
