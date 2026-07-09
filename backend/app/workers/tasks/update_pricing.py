@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 async def _update_pricing_async():
     """Recalculate prices for all dynamic-priced listings."""
+    from app.core.security import decrypt_credentials
     from app.db.session import async_session_factory
     from app.integrations.registry import ConnectorRegistry
     from app.modules.listings.models import Listing, ListingStatus, PricingStrategy
@@ -73,7 +74,7 @@ async def _update_pricing_async():
                     if conn:
                         try:
                             connector = ConnectorRegistry.get_connector(
-                                conn.platform, conn.credentials, conn.region
+                                conn.platform, decrypt_credentials(conn.credentials), conn.region
                             )
                             await connector.update_price(
                                 listing.external_listing_id, new_price, listing.currency

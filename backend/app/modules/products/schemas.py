@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from app.modules.products.models import ProductStatus, SourcingMode
+from app.modules.products.models import Platform, ProductStatus, SourcingMode
 
 
 # ---------------------------------------------------------------------------
@@ -106,3 +106,122 @@ class ProductResponse(BaseModel):
 class ProductListResponse(BaseModel):
     items: list[ProductResponse]
     total: int
+
+
+# ---------------------------------------------------------------------------
+# Platform Connections
+# ---------------------------------------------------------------------------
+
+
+class PlatformConnectionCreate(BaseModel):
+    platform: Platform
+    region: str = Field(..., min_length=2, max_length=5)
+    account_name: str | None = Field(default=None, max_length=255)
+    credentials: dict = Field(default_factory=dict)
+    is_active: bool = True
+
+
+class PlatformConnectionUpdate(BaseModel):
+    account_name: str | None = Field(default=None, max_length=255)
+    credentials: dict | None = None
+    is_active: bool | None = None
+
+
+class PlatformConnectionResponse(BaseModel):
+    id: uuid.UUID
+    user_id: uuid.UUID
+    platform: Platform
+    region: str
+    account_name: str | None
+    has_credentials: bool
+    credential_keys: list[str]
+    is_active: bool
+    last_synced_at: datetime | None
+    last_sync_count: int
+    last_sync_error: str | None
+    alert_level: str
+    alert_reason: str
+    health_score: int
+    stale_for_seconds: int | None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class PlatformConnectionListResponse(BaseModel):
+    items: list[PlatformConnectionResponse]
+    total: int
+
+
+class PlatformConnectionTestResult(BaseModel):
+    ok: bool
+    platform: Platform
+    region: str
+    message: str
+
+
+class PlatformOAuthStartRequest(BaseModel):
+    platform: Platform
+    region: str = Field(default="CN", min_length=2, max_length=5)
+    scopes: list[str] = Field(default_factory=list)
+
+
+class PlatformOAuthStartResponse(BaseModel):
+    platform: Platform
+    region: str
+    authorization_url: str
+    state: str
+
+
+class PlatformOAuthCallbackResponse(BaseModel):
+    ok: bool
+    platform: Platform
+    region: str
+    message: str
+    connection: PlatformConnectionResponse
+
+
+class PlatformSyncEventResponse(BaseModel):
+    id: uuid.UUID
+    platform_connection_id: uuid.UUID
+    user_id: uuid.UUID
+    platform: Platform
+    region: str
+    event_type: str
+    status: str
+    message: str | None
+    count: int
+    duration_ms: int | None
+    details: dict
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class PlatformSyncEventListResponse(BaseModel):
+    items: list[PlatformSyncEventResponse]
+    total: int
+
+
+class PlatformSyncDailyTrendPoint(BaseModel):
+    day: str
+    total_events: int
+    success_events: int
+    error_events: int
+    success_rate: float | None
+    avg_duration_ms: float | None
+
+
+class PlatformSyncMetricsResponse(BaseModel):
+    platform_connection_id: uuid.UUID
+    window_hours: int
+    total_events: int
+    success_events: int
+    error_events: int
+    success_rate: float | None
+    avg_duration_ms: float | None
+    consecutive_error_count: int
+    last_success_at: datetime | None
+    last_error_at: datetime | None
+    daily_trend: list[PlatformSyncDailyTrendPoint] = Field(default_factory=list)

@@ -1,7 +1,9 @@
+import uuid
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import BadRequestError, ConflictError, UnauthorizedError
+from app.core.exceptions import BadRequestError, ConflictError, NotFoundError, UnauthorizedError
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -10,6 +12,18 @@ from app.core.security import (
 )
 from app.modules.auth.models import User
 from app.modules.auth.schemas import LoginRequest, RegisterRequest, TokenResponse
+
+
+def _default_preferences() -> dict:
+    return {
+        "sync_monitor": {
+            "success_rate_threshold": 95,
+            "consecutive_error_threshold": 3,
+            "seven_day_error_rate_threshold": 20,
+            "stale_threshold_minutes": 120,
+            "auto_refresh_seconds": 60,
+        }
+    }
 
 
 async def register_user(session: AsyncSession, data: RegisterRequest) -> User:
@@ -41,3 +55,37 @@ async def authenticate_user(session: AsyncSession, data: LoginRequest) -> TokenR
         access_token=create_access_token(str(user.id)),
         refresh_token=create_refresh_token(str(user.id)),
     )
+
+
+async def get_user_preferences(session: AsyncSession, user_id: uuid.UUID) -> dict:
+    user = await session.get(User, user_id)
+    if not user:
+        raise NotFoundError("User not found")
+
+    defaults = _default_preferences()
+    current = user.preferences or {}
+    sync_monitor = {
+        **defaults["sync_monitor"],
+        **(current.get("sync_monitor") or {}),
+    }
+    return {"sync_monitor": sync_monitor}
+
+
+async def update_user_preferences(session: AsyncSession, user_id: uuid.UUID, payload: dict) -> dict:
+    user = await session.get(User, user_id)
+    if not user:
+        raise NotFoundError("User not found")
+
+    defaults = _default_preferences()
+    current = user.preferences or {}
+    incoming_sync = (payload.get("sync_monitor") or {})
+    merged = {
+        "sync_monitor": {
+            **defaults["sync_monitor"],
+            **(current.get("sync_monitor") or {}),
+            **incoming_sync,
+        }
+    }
+    user.preferences = merged
+    await session.flush()
+    return merged

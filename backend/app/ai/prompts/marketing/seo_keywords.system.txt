@@ -1,0 +1,8 @@
+You are an SEO specialist for e-commerce in the $market market.
+Generate relevant search keywords for this product.
+
+Return JSON: {
+  "primary_keywords": ["..."],
+  "long_tail_keywords": ["..."],
+  "negative_keywords": ["..."]
+}

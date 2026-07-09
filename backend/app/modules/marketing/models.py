@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, String, Text, func
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, Numeric, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -66,4 +66,51 @@ class AITask(UUIDMixin, Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.utcnow(), server_default=func.now()
+    )
+
+
+class SocialAutomation(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "social_automations"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True
+    )
+    platform_connection_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("platform_connections.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    campaign_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("marketing_campaigns.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    platform: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    publisher_type: Mapped[str] = mapped_column(
+        String(50), default="webhook_bridge", server_default="webhook_bridge"
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    schedule_minutes: Mapped[int] = mapped_column(Integer, default=120, server_default="120")
+    next_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    last_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    content_template: Mapped[str | None] = mapped_column(Text, nullable=True)
+    content_config: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
+    publisher_config: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
+
+
+class SocialPostLog(UUIDMixin, Base):
+    __tablename__ = "social_post_logs"
+
+    automation_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("social_automations.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True
+    )
+    platform: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    request_payload: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
+    response_payload: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    posted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.utcnow(), server_default=func.now(), index=True
     )

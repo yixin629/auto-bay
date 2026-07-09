@@ -1,0 +1,80 @@
+{
+  "name": "AutoBay Social Publish Bridge",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "autobay/social-publish",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8cb89a7d-6d87-4d95-9a9d-c5abde2584f8",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        220,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json || {};\nconst body = input.body || input;\nconst headers = input.headers || {};\n\nconst expectedToken = (process.env.AUTOBAY_BRIDGE_TOKEN || '').trim();\nconst authHeader = String(headers.authorization || headers.Authorization || '').trim();\n\nif (expectedToken) {\n  const expectedHeader = `Bearer ${expectedToken}`;\n  if (authHeader !== expectedHeader) {\n    return [{\n      json: {\n        http_code: 401,\n        ok: false,\n        error: 'Unauthorized bridge token',\n        platform: body.platform || 'unknown'\n      }\n    }];\n  }\n}\n\nconst platform = body.platform || 'unknown';\nconst caption = String(body.caption || '');\nconst hashtags = Array.isArray(body.hashtags) ? body.hashtags : [];\nconst mediaUrls = Array.isArray(body.media_urls) ? body.media_urls : [];\nconst publishId = `pub_${Date.now()}`;\n\nreturn [{\n  json: {\n    http_code: 200,\n    ok: true,\n    platform,\n    publish_id: publishId,\n    caption_length: caption.length,\n    hashtag_count: hashtags.length,\n    media_count: mediaUrls.length,\n    message: 'Accepted by n8n bridge'\n  }\n}];"
+      },
+      "id": "d59ac4ea-3e47-4d2a-9e47-f8467cc8590f",
+      "name": "Build Publish Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: $json.ok, platform: $json.platform, publish_id: $json.publish_id, message: $json.message, error: $json.error, meta: { caption_length: $json.caption_length, hashtag_count: $json.hashtag_count, media_count: $json.media_count } } }}",
+        "options": {
+          "responseCode": "={{$json.http_code || 200}}"
+        }
+      },
+      "id": "4ec2bd63-8450-4a4a-8a2e-a4bfd2d9efdd",
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        700,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Build Publish Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Publish Result": {
+      "main": [
+        [
+          {
+            "node": "Respond 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b9f26f2b-7c9e-4e9f-a890-690f31ccf1a4"
+}

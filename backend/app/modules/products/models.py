@@ -43,6 +43,8 @@ class Platform(str, enum.Enum):
     AMAZON = "amazon"
     SHOPIFY = "shopify"
     TIKTOK = "tiktok"
+    DOUYIN = "douyin"
+    XIAOHONGSHU = "xiaohongshu"
     HARVEY_NORMAN = "harvey_norman"
 
 
@@ -162,3 +164,24 @@ class PlatformConnection(UUIDMixin, TimestampMixin, Base):
     last_synced_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    last_sync_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    last_sync_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class PlatformSyncEvent(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "platform_sync_events"
+
+    platform_connection_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("platform_connections.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True
+    )
+    platform: Mapped[Platform] = mapped_column(Enum(Platform), nullable=False)
+    region: Mapped[str] = mapped_column(String(5), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    details: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")

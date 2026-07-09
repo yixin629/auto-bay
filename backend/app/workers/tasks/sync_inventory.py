@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 async def _sync_inventory_async():
     """Async implementation of inventory sync."""
+    from app.core.security import decrypt_credentials
     from app.db.session import async_session_factory
     from app.integrations.registry import ConnectorRegistry
     from app.modules.inventory.models import InventoryItem
@@ -53,7 +54,7 @@ async def _sync_inventory_async():
                     continue
 
                 connector = ConnectorRegistry.get_connector(
-                    conn.platform, conn.credentials, conn.region
+                    conn.platform, decrypt_credentials(conn.credentials), conn.region
                 )
 
                 # Push stock level to platform

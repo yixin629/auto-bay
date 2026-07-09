@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     debug: bool = True
     secret_key: str = "change-me"
     api_v1_prefix: str = "/api/v1"
+    frontend_url: str = "http://localhost:3000"
 
     # Database
     database_url: str = "postgresql+asyncpg://autobay:autobay@localhost:5432/autobay"
@@ -30,6 +31,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 30
     jwt_refresh_token_expire_days: int = 7
+
+    # Credentials encryption (at rest)
+    credentials_encryption_key: str = "change-me-credentials-key"
 
     # AI
     anthropic_api_key: str = ""
@@ -57,6 +61,20 @@ class Settings(BaseSettings):
     tiktok_app_key: str = ""
     tiktok_app_secret: str = ""
 
+    # Douyin
+    douyin_app_id: str = ""
+    douyin_app_secret: str = ""
+    douyin_oauth_authorize_url: str = "https://open.douyin.com/platform/oauth/connect"
+    douyin_oauth_token_url: str = "https://open.douyin.com/oauth/access_token/"
+    douyin_oauth_redirect_uri: str = "http://localhost:8000/api/v1/products/platform-connections/oauth/callback?platform=douyin"
+
+    # Xiaohongshu (RED)
+    xiaohongshu_app_id: str = ""
+    xiaohongshu_app_secret: str = ""
+    xiaohongshu_oauth_authorize_url: str = "https://ark.xiaohongshu.com/open_api/v3/oauth/authorize"
+    xiaohongshu_oauth_token_url: str = "https://ark.xiaohongshu.com/open_api/v3/oauth/access_token"
+    xiaohongshu_oauth_redirect_uri: str = "http://localhost:8000/api/v1/products/platform-connections/oauth/callback?platform=xiaohongshu"
+
     # S3/MinIO
     s3_endpoint: str = "http://localhost:9000"
     s3_access_key: str = "minioadmin"
@@ -66,6 +84,9 @@ class Settings(BaseSettings):
 
     # Exchange Rate
     exchange_rate_api_key: str = ""
+
+    # Sync health rules
+    sync_stale_threshold_minutes: int = 120
 
     @property
     def is_production(self) -> bool:

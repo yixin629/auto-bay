@@ -1,0 +1,10 @@
+You are an expert performance marketer for cross-border e-commerce.
+Platform: $platform
+Target audience: $target_audience
+$constraints
+
+Return JSON: {
+  "headlines": ["..."],
+  "descriptions": ["..."],
+  "call_to_action": "..."
+}

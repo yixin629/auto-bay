@@ -9,9 +9,16 @@ from app.modules.auth.schemas import (
     LoginRequest,
     RegisterRequest,
     TokenResponse,
+    UserPreferencesResponse,
+    UserPreferencesUpdateRequest,
     UserResponse,
 )
-from app.modules.auth.service import authenticate_user, register_user
+from app.modules.auth.service import (
+    authenticate_user,
+    get_user_preferences,
+    register_user,
+    update_user_preferences,
+)
 
 router = APIRouter()
 
@@ -38,3 +45,22 @@ async def get_me(
 
         raise NotFoundError("User not found")
     return user
+
+
+@router.get("/me/preferences", response_model=UserPreferencesResponse)
+async def get_my_preferences(
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    session: AsyncSession = Depends(get_session),
+):
+    prefs = await get_user_preferences(session, user_id)
+    return UserPreferencesResponse(**prefs)
+
+
+@router.patch("/me/preferences", response_model=UserPreferencesResponse)
+async def update_my_preferences(
+    data: UserPreferencesUpdateRequest,
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    session: AsyncSession = Depends(get_session),
+):
+    prefs = await update_user_preferences(session, user_id, data.model_dump())
+    return UserPreferencesResponse(**prefs)

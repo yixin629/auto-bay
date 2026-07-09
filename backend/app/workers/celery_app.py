@@ -41,6 +41,14 @@ celery_app.conf.beat_schedule = {
         "task": "app.workers.tasks.update_pricing.recalculate_all_prices",
         "schedule": 3600.0,
     },
+    "refresh-oauth-tokens-every-30min": {
+        "task": "app.workers.tasks.refresh_platform_tokens.refresh_oauth_tokens",
+        "schedule": 1800.0,
+    },
+    "sync-social-content-every-10min": {
+        "task": "app.workers.tasks.sync_social_content.sync_social_content",
+        "schedule": 600.0,
+    },
 }
 
 celery_app.autodiscover_tasks(["app.workers.tasks"])

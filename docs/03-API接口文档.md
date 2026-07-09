@@ -216,6 +216,56 @@ campaign_type 枚举：`ebay_promoted|amazon_ppc|google_ads|facebook_ads|tiktok_
 }
 ```
 
+### POST /marketing/social-automations — 创建社媒自动发布
+```json
+{
+  "name": "CN Social Auto Post",
+  "platform_connection_id": "uuid",
+  "campaign_id": "uuid (optional)",
+  "schedule_minutes": 120,
+  "publisher_type": "webhook_bridge",
+  "content_template": "{caption}",
+  "content_config": {
+    "product_title": "AutoBay精选好物",
+    "product_description": "跨境精选，支持快速发货",
+    "tone": "casual",
+    "media_urls": ["https://..."]
+  },
+  "publisher_config": {
+    "endpoint": "https://your-bridge/publish",
+    "token": "optional",
+    "timeout_seconds": 20
+  }
+}
+```
+
+### GET /marketing/social-automations — 自动化列表
+
+### POST /marketing/social-automations/{automation_id}/run — 立即执行一次
+返回本次执行日志摘要（status/platform/posted_at/error_message）。
+
+### PATCH /marketing/social-automations/{automation_id}/active — 启停自动化
+```json
+{ "is_active": false }
+```
+
+### GET /marketing/social-post-logs — 社媒发布日志
+Query 参数：`automation_id`, `offset`, `limit`
+
+### GET /marketing/social-post-logs/{log_id} — 社媒发布日志详情
+返回字段包含：`request_payload`, `response_payload`, `error_message`，用于排障。
+
+### 自动暂停建议参数
+创建自动化时可在 `content_config` 中加入：
+
+```json
+{
+  "max_consecutive_errors": 3
+}
+```
+
+当连续失败次数达到阈值后，自动化会自动暂停（`is_active=false`）。
+
 ---
 
 ## 错误响应格式

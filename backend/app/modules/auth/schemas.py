@@ -28,3 +28,19 @@ class UserResponse(BaseModel):
     is_active: bool
 
     model_config = {"from_attributes": True}
+
+
+class SyncMonitorPreferences(BaseModel):
+    success_rate_threshold: int = 95
+    consecutive_error_threshold: int = 3
+    seven_day_error_rate_threshold: int = 20
+    stale_threshold_minutes: int = 120
+    auto_refresh_seconds: int = 60
+
+
+class UserPreferencesResponse(BaseModel):
+    sync_monitor: SyncMonitorPreferences
+
+
+class UserPreferencesUpdateRequest(BaseModel):
+    sync_monitor: SyncMonitorPreferences

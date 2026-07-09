@@ -3,6 +3,7 @@
 import logging
 
 from app.ai.llm import LLMResponse, ModelTier, llm_client
+from app.ai.prompts.loader import render_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -15,14 +16,7 @@ async def generate_listing_title(
     region: str,
 ) -> LLMResponse:
     """Generate an SEO-optimized listing title for a specific platform."""
-    system = f"""You are an expert {platform} listing title optimizer for the {region} market.
-Generate a title that:
-- Is under 80 characters for eBay, 200 for Amazon, 255 for Shopify
-- Front-loads the most searchable keywords
-- Includes brand, key specs, and condition
-- Never uses ALL CAPS or excessive punctuation
-- Is in English
-Return ONLY the title, nothing else."""
+    system = render_prompt("listing_generation/title.system.txt", platform=platform, region=region)
 
     messages = [
         {
@@ -44,17 +38,12 @@ async def generate_listing_description(
     """Generate a compelling product description for a specific platform and language."""
     lang_instruction = "Write in English." if language == "en" else f"Write in {language}."
 
-    system = f"""You are an expert e-commerce copywriter for {platform} ({region} market).
-{lang_instruction}
-Generate a compelling product description that:
-- Highlights key features and benefits
-- Uses bullet points for scanability
-- Includes relevant SEO keywords naturally
-- Addresses common buyer concerns
-- Is professional and trustworthy
-- Appropriate length: ~150-300 words
-
-Return the description in HTML format with proper tags."""
+    system = render_prompt(
+        "listing_generation/description.system.txt",
+        platform=platform,
+        region=region,
+        lang_instruction=lang_instruction,
+    )
 
     messages = [
         {
@@ -71,10 +60,10 @@ async def translate_listing(
     target_language: str,
 ) -> LLMResponse:
     """Translate listing content to a target language while preserving SEO quality."""
-    system = f"""You are a professional e-commerce translator.
-Translate the following listing content to {target_language}.
-Preserve SEO keywords, maintain marketing tone, adapt cultural references.
-Return JSON: {{"title": "...", "description": "..."}}"""
+    system = render_prompt(
+        "listing_generation/translate.system.txt",
+        target_language=target_language,
+    )
 
     messages = [
         {

@@ -1,6 +1,7 @@
 import enum
 
 from sqlalchemy import Boolean, Enum, String
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDMixin
@@ -22,3 +23,4 @@ class User(UUIDMixin, TimestampMixin, Base):
         Enum(UserRole), default=UserRole.OWNER, server_default="OWNER"
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    preferences: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")

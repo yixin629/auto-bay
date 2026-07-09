@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import time
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
@@ -11,11 +12,40 @@ from app.workers.celery_app import celery_app
 logger = logging.getLogger(__name__)
 
 
+def _map_external_status(status: str | None) -> "OrderStatus":
+    from app.modules.orders.models import OrderStatus
+
+    normalized = (status or "").strip().lower()
+    mapping = {
+        "new": OrderStatus.NEW,
+        "pending": OrderStatus.NEW,
+        "paid": OrderStatus.AWAITING_SHIPMENT,
+        "to_ship": OrderStatus.AWAITING_SHIPMENT,
+        "awaiting_shipment": OrderStatus.AWAITING_SHIPMENT,
+        "processing": OrderStatus.PROCESSING,
+        "shipped": OrderStatus.SHIPPED,
+        "in_transit": OrderStatus.SHIPPED,
+        "delivered": OrderStatus.DELIVERED,
+        "completed": OrderStatus.COMPLETED,
+        "finished": OrderStatus.COMPLETED,
+        "cancelled": OrderStatus.CANCELLED,
+        "canceled": OrderStatus.CANCELLED,
+        "closed": OrderStatus.CANCELLED,
+        "refund": OrderStatus.REFUNDED,
+        "refunded": OrderStatus.REFUNDED,
+        "return": OrderStatus.RETURNED,
+        "returned": OrderStatus.RETURNED,
+    }
+    return mapping.get(normalized, OrderStatus.NEW)
+
+
 async def _sync_orders_async():
     """Async implementation of order sync."""
+    from app.core.security import decrypt_credentials
     from app.db.session import async_session_factory
     from app.integrations.registry import ConnectorRegistry
-    from app.modules.orders.models import Order, OrderLineItem, OrderStatus
+    from app.modules.orders.models import Order, OrderLineItem
+    from app.modules.products.audit import record_platform_sync_event
     from app.modules.products.models import PlatformConnection
 
     async with async_session_factory() as session:
@@ -27,14 +57,17 @@ async def _sync_orders_async():
         logger.info("Syncing orders for %d platform connections", len(connections))
 
         for conn in connections:
+            started_ms = time.monotonic() * 1000
             try:
                 connector = ConnectorRegistry.get_connector(
-                    conn.platform, conn.credentials, conn.region
+                    conn.platform, decrypt_credentials(conn.credentials), conn.region
                 )
 
                 # Fetch orders since last sync (or last 24h)
                 since = conn.last_synced_at or (datetime.now(timezone.utc) - timedelta(hours=24))
                 external_orders = await connector.fetch_orders(since)
+                conn.last_sync_count = len(external_orders)
+                conn.last_sync_error = None
                 logger.info(
                     "[%s/%s] Fetched %d orders",
                     conn.platform.value, conn.region, len(external_orders),
@@ -58,7 +91,7 @@ async def _sync_orders_async():
                         platform=conn.platform,
                         region=conn.region,
                         external_order_id=ext_order.external_order_id,
-                        status=OrderStatus.NEW,
+                        status=_map_external_status(ext_order.status),
                         customer_name=ext_order.customer_name,
                         customer_email=ext_order.customer_email,
                         shipping_address=ext_order.shipping_address,
@@ -87,11 +120,38 @@ async def _sync_orders_async():
 
                 # Update last synced timestamp
                 conn.last_synced_at = datetime.now(timezone.utc)
+
+                await record_platform_sync_event(
+                    session,
+                    connection=conn,
+                    event_type="orders_sync",
+                    status="success",
+                    message=f"Fetched {len(external_orders)} orders",
+                    count=len(external_orders),
+                    duration_ms=int(time.monotonic() * 1000 - started_ms),
+                    details={"since": since.isoformat()},
+                )
                 await session.commit()
 
             except Exception as e:
                 logger.error("[%s/%s] Order sync failed: %s", conn.platform.value, conn.region, e)
                 await session.rollback()
+                conn.last_sync_count = 0
+                conn.last_sync_error = str(e)[:1000]
+                conn.last_synced_at = datetime.now(timezone.utc)
+                try:
+                    await record_platform_sync_event(
+                        session,
+                        connection=conn,
+                        event_type="orders_sync",
+                        status="error",
+                        message=str(e)[:1000],
+                        count=0,
+                        duration_ms=int(time.monotonic() * 1000 - started_ms),
+                    )
+                    await session.commit()
+                except Exception:
+                    await session.rollback()
                 continue
 
 

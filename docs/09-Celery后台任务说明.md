@@ -7,7 +7,7 @@
 │ Celery Beat │────>│    Redis     │────>│   Celery Workers        │
 │  (调度器)    │     │  (消息队列)  │     │                         │
 │             │     │             │     │  Queue: default (通用)    │
-│ 4 个定时任务 │     │  3 个 DB:    │     │  Queue: sync   (同步)    │
+│ 5 个定时任务 │     │  3 个 DB:    │     │  Queue: sync   (同步)    │
 │             │     │  /1 broker  │     │  Queue: ai     (AI任务)  │
 │             │     │  /2 results │     │                         │
 └─────────────┘     └─────────────┘     └─────────────────────────┘
@@ -23,6 +23,7 @@
 | sync_all_inventory | 每 15 分钟 | sync | `tasks/sync_inventory.py` |
 | fetch_rates | 每 24 小时 | default | `tasks/update_exchange_rates.py` |
 | recalculate_all_prices | 每 1 小时 | default | `tasks/update_pricing.py` |
+| sync_social_content | 每 10 分钟 | default | `tasks/sync_social_content.py` |
 
 ---
 
@@ -80,6 +81,18 @@
    - 如果价格变化 > $0.01，更新 listing.price
    - 记录到 `price_history` 表
    - 如果有 external_listing_id，推送新价格到平台
+
+### 5. sync_social_content — 社媒自动发布
+
+**频率**：每 10 分钟
+
+**逻辑**：
+1. 查询 `social_automations` 中 `is_active=true` 且 `next_run_at <= now` 的任务
+2. 用 AI 生成 caption/hashtags（可结合 campaign 文案）
+3. 通过 `SocialPublisherRegistry` 调用发布器（默认 `webhook_bridge`）
+4. 写入 `social_post_logs`，并更新自动化 `last_status/last_error/last_run_at/next_run_at`
+
+**重试策略**：任务级 1 次重试；单个 automation 失败不阻塞其他 automation
 
 ---
 

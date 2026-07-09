@@ -4,6 +4,7 @@ import json
 import logging
 
 from app.ai.llm import ModelTier, llm_client
+from app.ai.prompts.loader import render_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -24,16 +25,12 @@ async def generate_ad_copy(
     }
     constraints = platform_constraints.get(platform, "Generate 3 ad copy variants.")
 
-    system = f"""You are an expert performance marketer for cross-border e-commerce.
-Platform: {platform}
-Target audience: {target_audience}
-{constraints}
-
-Return JSON: {{
-  "headlines": ["..."],
-  "descriptions": ["..."],
-  "call_to_action": "..."
-}}"""
+    system = render_prompt(
+        "marketing/ad_copy.system.txt",
+        platform=platform,
+        target_audience=target_audience,
+        constraints=constraints,
+    )
 
     messages = [
         {
@@ -61,14 +58,7 @@ async def generate_seo_keywords(
     market: str = "AU",
 ) -> dict:
     """Generate SEO keywords for product listings. Uses BUDGET model."""
-    system = f"""You are an SEO specialist for e-commerce in the {market} market.
-Generate relevant search keywords for this product.
-
-Return JSON: {{
-  "primary_keywords": ["..."],
-  "long_tail_keywords": ["..."],
-  "negative_keywords": ["..."]
-}}"""
+    system = render_prompt("marketing/seo_keywords.system.txt", market=market)
 
     messages = [
         {
@@ -93,15 +83,7 @@ async def generate_social_post(
     tone: str = "casual",
 ) -> dict:
     """Generate social media post content."""
-    system = f"""You are a social media content creator for an e-commerce brand.
-Platform: {platform}, Tone: {tone}
-Create an engaging post with relevant hashtags.
-
-Return JSON: {{
-  "caption": "...",
-  "hashtags": ["..."],
-  "call_to_action": "..."
-}}"""
+    system = render_prompt("marketing/social_post.system.txt", platform=platform, tone=tone)
 
     messages = [
         {

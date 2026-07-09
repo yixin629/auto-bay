@@ -4,21 +4,14 @@ import json
 import logging
 
 from app.ai.llm import ModelTier, llm_client
+from app.ai.prompts.loader import render_prompt
 
 logger = logging.getLogger(__name__)
 
 
 async def classify_intent(message: str) -> dict:
     """Classify customer message intent. Uses BUDGET model for speed."""
-    system = """You are a customer service intent classifier for an e-commerce platform.
-Classify the customer message into exactly one intent:
-- shipping_status: asking about delivery, tracking, shipping time
-- return_request: wants to return, exchange, or get refund
-- product_question: asking about product specs, compatibility, features
-- complaint: unhappy about quality, service, or experience
-- general: greeting, thank you, other
-
-Return JSON: {"intent": "...", "confidence": 0.0-1.0}"""
+    system = render_prompt("customer_service/intent_classifier.system.txt")
 
     messages = [{"role": "user", "content": f"Customer message: {message}"}]
     result = await llm_client.complete(messages, tier=ModelTier.BUDGET, system=system, max_tokens=50, temperature=0.1)
@@ -45,20 +38,11 @@ Order Context:
 - Items: {order_context.get('items', 'N/A')}
 """
 
-    system = f"""You are a friendly, professional customer service agent for an e-commerce store.
-The customer's intent has been classified as: {intent}
-{context_info}
-Guidelines:
-- Be empathetic and helpful
-- If you have order info, reference specific details
-- For shipping questions without tracking, say it will be provided soon
-- For returns, outline the standard return process (14-day window)
-- For complaints, apologize sincerely and offer resolution
-- Keep responses concise (2-4 sentences)
-- Never make up tracking numbers or order details you don't have
-- Sign off with "Best regards, AutoBay Support"
-
-Return JSON: {{"response": "your response text", "suggested_actions": ["list", "of", "follow-up actions"]}}"""
+    system = render_prompt(
+        "customer_service/response_generator.system.txt",
+        intent=intent,
+        context_info=context_info,
+    )
 
     messages = [{"role": "user", "content": f"Customer message: {customer_message}"}]
     result = await llm_client.complete(messages, tier=ModelTier.STANDARD, system=system, max_tokens=300, temperature=0.5)
